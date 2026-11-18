@@ -1,115 +1,89 @@
-import {
-  Tabs,
-  TabList,
-  TabTrigger,
-  TabSlot,
-  TabTriggerSlotProps,
-  TabListProps,
-} from 'expo-router/ui';
-import { SymbolView } from 'expo-symbols';
-import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import { TabList, TabSlot, TabTrigger, Tabs, type TabListProps, type TabTriggerSlotProps } from 'expo-router/ui';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import type { IconName } from '@/lib/icons';
+import { Radius } from '@/theme/tokens';
+import { useTheme } from '@/theme/use-theme';
 
-import { ExternalLink } from './external-link';
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
+import { Icon } from './icon';
+import { AppText } from './text';
 
+/** Web stand-in for the native tab bar: a floating, frosted pill like iOS 26. */
 export default function AppTabs() {
   return (
     <Tabs>
-      <TabSlot style={{ height: '100%' }} />
+      <TabSlot style={{ flex: 1 }} />
+      {/* Triggers must be direct children of the TabList's asChild element. */}
       <TabList asChild>
-        <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+        <FloatingBar>
+          <TabTrigger name="index" href="/" asChild>
+            <TabButton icon="todayFill" label="Today" />
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="beans" href="/beans" asChild>
+            <TabButton icon="beansFill" label="Beans" />
           </TabTrigger>
-        </CustomTabList>
+          <TabTrigger name="journal" href="/journal" asChild>
+            <TabButton icon="journalFill" label="Journal" />
+          </TabTrigger>
+        </FloatingBar>
       </TabList>
     </Tabs>
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+function FloatingBar({ children, style: _style, ...props }: TabListProps) {
+  const insets = useSafeAreaInsets();
+  const { c, isDark } = useTheme();
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
-          {children}
-        </ThemedText>
-      </ThemedView>
-    </Pressable>
-  );
-}
-
-export function CustomTabList(props: TabListProps) {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-
-  return (
-    <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={styles.innerContainer}>
-        <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
-        </ThemedText>
-
-        {props.children}
-
-        <ExternalLink href="https://docs.expo.dev" asChild>
-          <Pressable style={styles.externalPressable}>
-            <ThemedText type="link">Docs</ThemedText>
-            <SymbolView
-              tintColor={colors.text}
-              name={{ ios: 'arrow.up.right.square', web: 'link' }}
-              size={12}
-            />
-          </Pressable>
-        </ExternalLink>
-      </ThemedView>
+    <View {...props} style={[styles.barWrap, { bottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
+      <View
+        style={[
+          styles.bar,
+          {
+            backgroundColor: isDark ? 'rgba(38,30,24,0.82)' : 'rgba(255,251,245,0.82)',
+            borderColor: c.line,
+          },
+        ]}>
+        {children}
+      </View>
     </View>
   );
 }
 
+function TabButton({ isFocused, icon, label, ref: _ref, ...props }: TabTriggerSlotProps & { icon: IconName; label: string }) {
+  const { c } = useTheme();
+  const color = isFocused ? c.accent : c.inkSoft;
+  return (
+    <Pressable {...props} style={[styles.tab, isFocused && { backgroundColor: c.accentSoft }]}>
+      <Icon name={icon} size={22} color={color} />
+      <AppText variant="caption" weight={isFocused ? '700' : '500'} color={color}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  tabListContainer: {
-    position: 'absolute',
-    width: '100%',
-    padding: Spacing.three,
-    justifyContent: 'center',
-    alignItems: 'center',
+  barWrap: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center' },
+  bar: {
     flexDirection: 'row',
+    gap: 4,
+    padding: 5,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    // @ts-expect-error web-only style
+    backdropFilter: 'blur(20px) saturate(1.6)',
+    shadowColor: '#2A1C14',
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
   },
-  innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
-    flexDirection: 'row',
+  tab: {
     alignItems: 'center',
-    flexGrow: 1,
-    gap: Spacing.two,
-    maxWidth: MaxContentWidth,
-  },
-  brandText: {
-    marginRight: 'auto',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  tabButtonView: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-  externalPressable: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.one,
-    marginLeft: Spacing.three,
+    gap: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 22,
+    borderRadius: Radius.pill,
   },
 });

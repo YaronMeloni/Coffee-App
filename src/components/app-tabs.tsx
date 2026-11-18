@@ -1,31 +1,24 @@
 import { NativeTabs } from 'expo-router/native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { ICONS } from '@/lib/icons';
+import { useTheme } from '@/theme/use-theme';
 
+/** Native iOS tab bar (Liquid Glass on iOS 26) with SF Symbols. */
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-
+  const { c } = useTheme();
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+    <NativeTabs tintColor={c.accent} minimizeBehavior="onScrollDown">
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: ICONS.today.ios, selected: ICONS.todayFill.ios }} />
       </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="beans">
+        <NativeTabs.Trigger.Label>Beans</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: ICONS.beans.ios, selected: ICONS.beansFill.ios }} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="journal">
+        <NativeTabs.Trigger.Label>Journal</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: ICONS.journal.ios, selected: ICONS.journalFill.ios }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
